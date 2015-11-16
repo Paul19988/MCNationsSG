@@ -1,0 +1,11 @@
+name: MCNationsSG
+main: net.mcnations.sg.Core
+version: 6
+author: PaulCodesUK
+commands:
+    setspawn:
+       description: Sets spawnpoint
+    setlobby:
+       description: Sets Lobby Spawn point
+    next:
+       description: Forces to next gamestate
