@@ -1,5 +1,6 @@
 package net.mcnations.sg;
 
+import com.zaxxer.hikari.HikariDataSource;
 import net.mcnations.engine.logger.GameLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -25,7 +26,7 @@ public class Core extends JavaPlugin {
     public static FileConfiguration SpawnsConf = YamlConfiguration.loadConfiguration(spawnsYml);
     public static File worldsYml = new File("plugins/MCNationsSG", "worlds.yml");
     public static FileConfiguration WorldsConf = YamlConfiguration.loadConfiguration(worldsYml);
-    public static File mysqlYml = new File("plugins/MCNationsSG", "worlds.yml");
+    public static File mysqlYml = new File("plugins/MCNationsSG", "mysql.yml");
     public static FileConfiguration MySQLConf = YamlConfiguration.loadConfiguration(mysqlYml);
 
     public static String prefix;
@@ -58,23 +59,35 @@ public class Core extends JavaPlugin {
             }
         }
         try{
+            SpawnsConf.save(spawnsYml);
             SpawnsConf.load(spawnsYml);
         }catch(Exception ex) {
             ex.printStackTrace();
         }
-        game = new SGGame(new GameLogger(), "Survival Games", this, new String[] {MySQLConf.getString("host"), MySQLConf.getString("host"), "", "", ""});
+
+        game = new SGGame(new GameLogger(), "Survival Games", this, new String[] {
+                MySQLConf.getString("host"), MySQLConf.getInt("port") + "", MySQLConf.getString("database")
+                , MySQLConf.getString("username"), MySQLConf.getString("password")
+        });
         plugin = this;
         try{
             if(getConfig().getString("prefix") == null) {
                 getConfig().set("prefix", "&aDefault Prefix > &c");
+                saveConfig();
             }else{
                 prefix = ChatColor.translateAlternateColorCodes('&' ,getConfig().getString("prefix"));
             }
             if(getConfig().getString("bossbar") == null) {
                 getConfig().set("bossbar", "&aDefault BossBar Message.");
+                saveConfig();
             }else{
                 bossbar = ChatColor.translateAlternateColorCodes('&' ,getConfig().getString("bossbar"));
             }
+        }catch(Exception ex) {
+            ex.printStackTrace();
+        }
+        try{
+            worldborder = new WorldBorder();
         }catch(Exception ex) {
             ex.printStackTrace();
         }
@@ -83,6 +96,8 @@ public class Core extends JavaPlugin {
     public void onDisable() {
 
     }
+
+    public static WorldBorder worldborder;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -130,6 +145,9 @@ public class Core extends JavaPlugin {
                 }
                 API.voted.add(p);
             }
+        }else if(label.equalsIgnoreCase("next")) {
+            game.nextState();
+            p.sendMessage(prefix + "You have forced the game start.");
         }
         return false;
     }

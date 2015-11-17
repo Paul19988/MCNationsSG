@@ -11,12 +11,17 @@ import net.mcnations.sg.API;
 import net.mcnations.sg.Core;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.weather.WeatherChangeEvent;
+
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 /**
  * Created by PaulCodesUK on 13/11/2015.
@@ -30,12 +35,14 @@ public class LobbyState extends GameState {
     @Override
     public boolean onStateBegin() {
         regListener(this);
+        Bukkit.broadcastMessage("LOBBY START");
         return true;
     }
 
     @Override
     public boolean onStateEnd() {
         unregListener(this);
+        Bukkit.broadcastMessage("LOBBY END");
         return true;
     }
 
@@ -59,17 +66,22 @@ public class LobbyState extends GameState {
                     "§e§lmcnations.net"
             });
         }
-        if(--timer == 0) {
-            // Stop the state
+
+        timer--;
+        if(timer == 0) {
+            if(engine.getGamePlayers().size() >= engine.getGameMinPlayers()) {
+                engine.nextState();
+            }else{
+                Bukkit.broadcastMessage(Core.prefix + "Not enough players, Restarting timer " + ChatColor.GREEN + "(" + engine.getGamePlayers().size() + "/" + engine.getGameMaxPlayers() + ")" );
+                timer = 60;
+            }
         } else {
             if(timer % 10 == 0) {
                 Bukkit.broadcastMessage(Core.prefix + "Game starts in " + timer + " seconds.");
-            }else if(timer <= 5) {
-            }
-            if(timer == 5){
+            }else if(timer == 5){
                 Bukkit.broadcastMessage(Core.prefix + "Map has now been chosen!");
                 API.checkMapVotes();
-                Bukkit.broadcastMessage(Core.prefix + "Chosen map is: " + API.getCurrentMap());
+                Bukkit.broadcastMessage(Core.prefix + "Chosen map is: " + API.getCurrentMap().getName());
                 Bukkit.broadcastMessage(Core.prefix + "Game starts in " + timer + " seconds.");
             }else if(timer == 4) {
                 Bukkit.broadcastMessage(Core.prefix + "Game starts in " + timer + " seconds.");
@@ -79,15 +91,8 @@ public class LobbyState extends GameState {
                 Bukkit.broadcastMessage(Core.prefix + "Game starts in " + timer + " seconds.");
             }else if(timer == 1) {
                 Bukkit.broadcastMessage(Core.prefix + "Game starts in " + timer + " second.");
-            }else if(timer == 0) {
-                if(Bukkit.getOnlinePlayers().size() >= Bukkit.getMaxPlayers() / 2) {
-                    engine.nextState();
-                }else{
-                    Bukkit.broadcastMessage(Core.prefix + "Not enough players, Restarting timer " + ChatColor.GREEN + "(" + Bukkit.getOnlinePlayers() + "/" + Bukkit.getMaxPlayers() + ")" );
-                }
             }
         }
-        timer--;
     }
 
     @EventHandler
@@ -97,7 +102,26 @@ public class LobbyState extends GameState {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
-        e.setCancelled(true);
+        if(e.getItem().getType().equals(Material.ENDER_PEARL)) {
+            Player p = e.getPlayer();
+            p.sendMessage(Core.prefix + "You have been returned to the hub.");
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(b);
+            try {
+                out.writeUTF("Connect");
+                out.writeUTF("hub-1");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            p.sendPluginMessage(Core.plugin, "BungeeCord", b.toByteArray());
+            e.setCancelled(true);
+        }else if(e.getItem().getType().equals(Material.SKULL_ITEM)) {
+            e.setCancelled(true);
+        }else if(e.getItem().getType().equals(Material.NETHER_STAR)) {
+            e.setCancelled(true);
+        }else{
+            e.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -109,8 +133,6 @@ public class LobbyState extends GameState {
     public void onJoin(GameRegisterPlayerEvent e) {
         Player p = e.getPlayer();
         e.getEngine().getGamePlayers().add(p.getUniqueId());
-        XP xp = new XP(e.getPlayer());
-        XPManager.getXpProfiles().put(e.getPlayer().getUniqueId(), xp);
     }
 
     @EventHandler
@@ -120,7 +142,7 @@ public class LobbyState extends GameState {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-
+        e.setQuitMessage(null);
     }
 
     @EventHandler
@@ -135,11 +157,7 @@ public class LobbyState extends GameState {
 
     @EventHandler
     public void onDamage(EntityDamageEvent e) {
-        try {
-            e.setCancelled(true);
-        }catch(Exception ex) {
-
-        }
+        e.setCancelled(true);
     }
 
 }

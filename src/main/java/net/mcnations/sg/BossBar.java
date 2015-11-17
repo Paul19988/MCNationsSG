@@ -41,10 +41,10 @@ public class BossBar {
     }
 
     public static void removeBar(final Player player, int afterTicks) {
-        if (player.hasMetadata("SeesEnderdragon") && !toHide.containsKey(player.getName())) {
+        if (player.hasMetadata("SeesWither") && !toHide.containsKey(player.getName())) {
             BukkitRunnable runnable = new BukkitRunnable() {
                 public void run() {
-                    player.removeMetadata("SeesEnderdragon", plugin);
+                    player.removeMetadata("SeesWither", plugin);
                     sendRemovePacket(player);
                     toHide.remove(player.getName());
                 }
@@ -85,8 +85,8 @@ public class BossBar {
 
     public static void setName(Player player, String message, float health) {
         try {
-            if (!player.hasMetadata("SeesEnderdragon")) {
-                player.setMetadata("SeesEnderdragon", new FixedMetadataValue(plugin, true));
+            if (!player.hasMetadata("SeesWither")) {
+                player.setMetadata("SeesWither", new FixedMetadataValue(plugin, true));
             }
             if (toHide.containsKey(player.getName())) {
                 toHide.remove(player.getName()).cancel();

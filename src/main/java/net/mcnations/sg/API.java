@@ -1,5 +1,8 @@
 package net.mcnations.sg;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.EnumWrappers;
 import net.mcnations.engine.utils.itembuilder.ItemBuilder;
 import org.bukkit.*;
 import org.bukkit.block.BlockState;
@@ -8,8 +11,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scoreboard.DisplaySlot;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -17,7 +25,7 @@ import java.util.*;
  */
 public class API {
 
-    public static World currentMap = null;
+    public static World currentMap = Bukkit.getWorld("world");
 
     public static void setCurrentMap(World world) {
         currentMap = world;
@@ -69,8 +77,39 @@ public class API {
         }
     }
 
+    public static void sendLobbyItems(Player p) {
+
+        // Nether Star (Perks)
+        ItemStack perks = new ItemStack(Material.NETHER_STAR);
+        ItemMeta perksM = perks.getItemMeta();
+        perksM.setDisplayName(ChatColor.GOLD + "Donor Packages" + ChatColor.GREEN + "(XP)");
+        perks.setItemMeta(perksM);
+
+        // Player Head (Stats)
+        ItemStack player = new ItemStack(397, 1, (short) 3);
+        SkullMeta playerM = (SkullMeta)player.getItemMeta();
+        ArrayList<String> playerL = new ArrayList<String>();
+        playerL.clear();
+        playerL.add(ChatColor.GRAY + "Kills: 0");
+        playerL.add(ChatColor.GRAY + "Deaths: 0");
+        playerL.add(ChatColor.GRAY + "Wins: 0");
+        playerL.add(ChatColor.GRAY + "Loses: 0");
+        playerM.setDisplayName(ChatColor.GOLD + "Stats");
+        playerM.setLore(playerL);
+        playerM.setOwner(p.getName());
+        player.setItemMeta(playerM);
+        p.getInventory().setItem(3, player);
+
+        // Ender Pearl (Back to Hub)
+        ItemStack hub = new ItemStack(Material.ENDER_PEARL);
+        ItemMeta hubM = hub.getItemMeta();
+        hubM.setDisplayName(ChatColor.GOLD + "Back to hub");
+        hub.setItemMeta(hubM);
+        p.getInventory().setItem(8, hub);
+    }
+
     public static void sendBossBar(Player p) {
-        BossBar.setName(p, Core.bossbar, 100);
+        BossBar.setName(p, Core.bossbar, 400);
     }
 
     public static void updateScoreboard(Player p, String[] elements)
@@ -211,7 +250,6 @@ public class API {
         }
         return null;
     }
-
 
     public static void prepareWorlds() {
         try{

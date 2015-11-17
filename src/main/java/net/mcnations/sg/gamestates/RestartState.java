@@ -3,6 +3,7 @@ package net.mcnations.sg.gamestates;
 import net.mcnations.engine.Engine;
 import net.mcnations.engine.GameState;
 import net.mcnations.engine.events.GameRegisterPlayerEvent;
+import net.mcnations.engine.utils.xp.manager.XPManager;
 import net.mcnations.sg.API;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -41,6 +42,19 @@ public class RestartState extends GameState {
     public void tick() {
         for(Player p : Bukkit.getOnlinePlayers()) {
             API.sendBossBar(p);
+            API.updateScoreboard(p, new String[]{
+                    null,
+                    "§6§lCurrent Map:",
+                    "§oNone",
+                    "§6§lPlayers Online:",
+                    ChatColor.ITALIC + "" + engine.getGamePlayers().size() + "/" + engine.getGameMaxPlayers(),
+                    "§6§lYour XP:",
+                    "§o" + XPManager.getXpProfile(p).getXp(),
+                    "§6§lNation Coins:",
+                    "§oComing Soon",
+                    "",
+                    "§e§lmcnations.net"
+            });
         }
         switch(timer) {
             case 10:
